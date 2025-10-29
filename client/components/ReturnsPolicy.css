@@ -1,0 +1,406 @@
+.returns-policy {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.policy-header {
+    text-align: center;
+    margin-bottom: 50px;
+    background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+    color: white;
+    padding: 50px 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.policy-header h1 {
+    margin: 0 0 15px 0;
+    font-size: 3rem;
+    font-weight: 700;
+}
+
+.policy-header p {
+    margin: 0;
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.policy-section {
+    margin-bottom: 60px;
+}
+
+.policy-section h2 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    color: #1e293b;
+    border-bottom: 3px solid #ec4899;
+    padding-bottom: 10px;
+    display: inline-block;
+}
+
+/* Return Timeline */
+.return-timeline {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.timeline-visual {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+}
+
+.timeline-point {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    z-index: 2;
+}
+
+.point-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.timeline-point.active .point-circle {
+    background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+    color: white;
+    transform: scale(1.1);
+}
+
+.point-label {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.timeline-line {
+    flex: 1;
+    height: 3px;
+    background: #e2e8f0;
+    margin: 0 20px;
+}
+
+/* Conditions Grid */
+.conditions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+}
+
+.condition-card {
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.condition-card.valid {
+    background: #f0fdf4;
+    border-left: 5px solid #10b981;
+}
+
+.condition-card.invalid {
+    background: #fef3f2;
+    border-left: 5px solid #f04438;
+}
+
+.condition-icon {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.condition-card.valid .condition-icon {
+    color: #10b981;
+}
+
+.condition-card.invalid .condition-icon {
+    color: #f04438;
+}
+
+.condition-card h4 {
+    margin: 0 0 20px 0;
+    color: #1e293b;
+}
+
+.condition-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.condition-card li {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    color: #64748b;
+}
+
+.condition-card li:last-child {
+    border-bottom: none;
+}
+
+/* Process Steps */
+.process-steps {
+    display: grid;
+    gap: 20px;
+}
+
+.process-step {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.step-number {
+    background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+    color: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.step-content h4 {
+    margin: 0 0 10px 0;
+    color: #1e293b;
+    font-size: 1.3rem;
+}
+
+.step-content p {
+    margin: 0;
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+/* Refund Info */
+.refund-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+}
+
+.refund-card {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.refund-card h4 {
+    margin: 0 0 25px 0;
+    color: #1e293b;
+    font-size: 1.3rem;
+}
+
+.refund-methods {
+    display: grid;
+    gap: 15px;
+}
+
+.method {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
+.method i {
+    color: #ec4899;
+    font-size: 1.5rem;
+    width: 30px;
+}
+
+.method span {
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.timeline-details {
+    display: grid;
+    gap: 20px;
+}
+
+.timeline-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.timeline-item:last-child {
+    border-bottom: none;
+}
+
+.timeline-item .time {
+    font-weight: 700;
+    color: #ec4899;
+    font-size: 1.1rem;
+}
+
+.timeline-item .description {
+    color: #64748b;
+    text-align: right;
+}
+
+/* Exchange Info */
+.exchange-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+}
+
+.exchange-card {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.exchange-card h4 {
+    margin: 0 0 15px 0;
+    color: #1e293b;
+    font-size: 1.3rem;
+}
+
+.exchange-card p {
+    margin: 0 0 20px 0;
+    color: #64748b;
+    font-size: 1.1rem;
+}
+
+.exchange-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.exchange-card li {
+    padding: 8px 0;
+    color: #64748b;
+    position: relative;
+    padding-left: 20px;
+}
+
+.exchange-card li:before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #10b981;
+    font-weight: 700;
+}
+
+/* Support Section */
+.support-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+}
+
+.support-card {
+    background: white;
+    padding: 30px 25px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease;
+}
+
+.support-card:hover {
+    transform: translateY(-5px);
+}
+
+.support-card i {
+    font-size: 2.5rem;
+    color: #ec4899;
+    margin-bottom: 20px;
+}
+
+.support-card h4 {
+    margin: 0 0 15px 0;
+    color: #1e293b;
+}
+
+.support-card p {
+    margin: 0 0 10px 0;
+    color: #1e293b;
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.support-card span {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .returns-policy {
+        padding: 15px;
+    }
+
+    .policy-header {
+        padding: 30px 20px;
+    }
+
+    .policy-header h1 {
+        font-size: 2rem;
+    }
+
+    .policy-section h2 {
+        font-size: 1.5rem;
+    }
+
+    .timeline-visual {
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .timeline-line {
+        width: 3px;
+        height: 50px;
+        margin: 0;
+    }
+
+    .conditions-grid,
+    .refund-info,
+    .exchange-info,
+    .support-options {
+        grid-template-columns: 1fr;
+    }
+
+    .process-step {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .timeline-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+}

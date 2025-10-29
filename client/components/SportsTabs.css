@@ -1,0 +1,76 @@
+.popular-sportss {
+  padding: 32px 24px;
+}
+
+.popular-sportss h2 {
+  font-size: 2rem;
+  margin-bottom: 24px;
+}
+
+/* Add to SportsTabs.css or create SportsGrid.css and import it */
+.sport-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.sport-card {
+  background: var(--card-background);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  flex-direction: column;
+  align-items: stretch;
+  position: relative;
+  width: 100%;
+  height: 260px;
+  padding: 0;
+  display: flex;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sport-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
+
+.sports-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 16px;
+}
+
+.sports-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 30%, transparent);
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  text-align: center;
+}
+
+.sports-name {
+  display: block;
+  font-size: 1.1rem;
+}
+
+
+.sports-sport {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* Remove or comment out the overlay if not needed */
+/*
+.sports-overlay {
+  display: none;
+}
+*/

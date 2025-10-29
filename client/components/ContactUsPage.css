@@ -1,0 +1,60 @@
+.contact-footer {
+  text-align: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.social-icons {
+  margin-bottom: 15px;
+}
+
+.social-icons a {
+  display: inline-block;
+  margin: 0 15px;
+  color: #333;
+  transition: transform 0.2s ease-in-out;
+}
+
+.social-icons a:hover {
+  transform: scale(1.1);
+}
+
+.social-icons svg {
+  fill: currentColor;
+}
+
+.contact-email {
+  font-size: 1rem;
+  color: #555;
+}
+
+.contact-email a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.contact-email a:hover {
+  text-decoration: underline;
+}
+
+.auth-form textarea {
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid rgba(44, 62, 80, 0.1);
+  border-radius: 12px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(5px);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.auth-form textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+}

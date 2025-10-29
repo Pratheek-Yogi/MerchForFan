@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        // Disables semantic analysis and reporting of errors in JavaScript files.
+        // Highly recommended for large JavaScript projects.
+        "checkJs": false
+    },
+    "exclude": [
+        // The most important exclusion: prevents the server from analyzing thousands of dependency files.
+        "node_modules",
+        // Exclude common output/build folders, as they are generated and shouldn't be analyzed.
+        "dist",
+        "build",
+        // You can add more folders here, e.g., "out", "temp"
+    ]
+}

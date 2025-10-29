@@ -1,0 +1,27 @@
+{
+    // Existing setting (keep this)
+    "git.ignoreLimitWarning": true,
+    // NEW PERFORMANCE SETTINGS START HERE
+    // 1. Exclude folders from the VS Code file watcher (less work for VS Code)
+    "files.watcherExclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true
+    },
+    // 2. Exclude folders from VS Code search (faster search results)
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true
+    },
+    // 3. Disable automatic type acquisition (prevents slow npm fetches)
+    "typescript.disableAutomaticTypeAcquisition": true,
+    // 4. Reduce auto import suggestions (saves indexing time)
+    "javascript.suggest.autoImports": false,
+    "typescript.suggest.autoImports": false,
+    // 5. Increase memory allocated to the JS/TS server (Optional, recommended for large projects)
+    "typescript.tsserver.maxTsServerMemory": 4096,
+    "liveServer.settings.multiRootWorkspaceName": "ProjectIII"
+}

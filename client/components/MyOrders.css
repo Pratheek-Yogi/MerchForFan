@@ -1,0 +1,38 @@
+.my-orders-container {
+  padding: 20px;
+}
+
+.order-card {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.status {
+  padding: 3px 8px;
+  border-radius: 12px;
+  color: white;
+}
+
+.status.pending {
+  background-color: #ffc107;
+}
+
+.status.shipped {
+  background-color: #17a2b8;
+}
+
+.status.delivered {
+  background-color: #28a745;
+}
+
+.status.cancelled {
+  background-color: #dc3545;
+}

@@ -1,0 +1,77 @@
+.limited-editions {
+  margin-top: 28px;
+  padding-left: 20px;    /* Optional: add some padding */
+  padding-right: 20px;   /* Optional: add some padding */
+}
+
+.le-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Each card takes half the available width */
+  gap: 18px;
+  /* Remove width: fit-content; */
+  justify-content: stretch; /* Ensures the grid stretches to container */
+}
+
+.limited-editions h2 {
+  margin-bottom: 18px;
+}
+
+.le-card {
+  position: relative;
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  width: 100%; /* Make sure each card fills its grid cell */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.le-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+}
+
+.le-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.le-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 80%);
+}
+
+.le-content {
+  position: absolute;
+  left: 20px;
+  bottom: 16px;
+  right: 20px;
+  color: var(--text);
+  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+}
+
+.le-title {
+  margin: 0 0 6px 0;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.le-sub {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.95;
+}
+
+.always-white {
+  color: #fff !important;
+}
+
+@media (max-width: 900px) {
+  .limited-editions { grid-template-columns: 1fr; }
+  .le-card { height: 260px; }
+  .le-title { font-size: 26px; }
+}

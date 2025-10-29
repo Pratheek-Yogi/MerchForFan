@@ -1,0 +1,172 @@
+.merch-page {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+}
+
+/* Hero Section */
+.merch-hero {
+    text-align: center;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    margin-bottom: 40px;
+    color: white;
+}
+
+.hero-title {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.hero-tags {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.sale-tag {
+    background: #ff4444;
+}
+
+.rr-tag {
+    background: #4caf50;
+}
+
+.dream-tag {
+    background: #ff9800;
+}
+
+/* Categories Section */
+.categories-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.category-card {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border: 2px solid #f0f0f0;
+    transition: transform 0.3s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    border-color: #667eea;
+}
+
+.category-title {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
+}
+
+.sale-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.sale-item {
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+    border-left: 4px solid #667eea;
+}
+
+.sale-item.hot-sale {
+    background: #fff5f5;
+    border-left-color: #ff4444;
+    color: #ff4444;
+    font-weight: bold;
+}
+
+.category-link {
+    display: block;
+    text-align: center;
+    padding: 12px 20px;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.category-link:hover {
+    background: #5a6fd8;
+}
+
+/* Featured Product */
+.featured-product {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-top: 40px;
+    text-align: center;
+}
+
+.featured-title {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.featured-price {
+    font-size: 2rem;
+    color: #ff4444;
+    font-weight: bold;
+    margin: 15px 0;
+}
+
+.featured-category {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .merch-page {
+        padding: 15px;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .categories-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .featured-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    
+    .hero-tags {
+        flex-direction: column;
+        align-items: center;
+    }
+}

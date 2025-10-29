@@ -1,0 +1,305 @@
+.shipping-policy {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.policy-header {
+    text-align: center;
+    margin-bottom: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 50px 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.policy-header h1 {
+    margin: 0 0 15px 0;
+    font-size: 3rem;
+    font-weight: 700;
+}
+
+.policy-header p {
+    margin: 0;
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.policy-section {
+    margin-bottom: 60px;
+}
+
+.policy-section h2 {
+    font-size: 2rem;
+    margin-bottom: 30px;
+    color: #1e293b;
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 10px;
+    display: inline-block;
+}
+
+/* Shipping Methods */
+.shipping-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.method-card {
+    background: white;
+    padding: 30px 25px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease;
+    border: 1px solid #e2e8f0;
+}
+
+.method-card:hover {
+    transform: translateY(-5px);
+}
+
+.method-icon {
+    font-size: 3rem;
+    color: #667eea;
+    margin-bottom: 20px;
+}
+
+.method-card h3 {
+    margin: 0 0 10px 0;
+    color: #1e293b;
+}
+
+.method-card p {
+    color: #64748b;
+    margin-bottom: 15px;
+}
+
+.method-price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #22c55e;
+}
+
+/* Timeline Grid */
+.timeline-grid {
+    display: grid;
+    gap: 25px;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.timeline-number {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.timeline-content h4 {
+    margin: 0 0 10px 0;
+    color: #1e293b;
+}
+
+.timeline-content p {
+    margin: 0;
+    color: #64748b;
+}
+
+/* Service Areas */
+.service-areas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.area-card {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    position: relative;
+}
+
+.area-card h3 {
+    margin: 0 0 20px 0;
+    color: #1e293b;
+}
+
+.area-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+}
+
+.area-card li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+    color: #64748b;
+}
+
+.area-card li:last-child {
+    border-bottom: none;
+}
+
+.delivery-time {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    background: #22c55e;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Tracking Info */
+.tracking-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+}
+
+.tracking-step {
+    text-align: center;
+    padding: 30px 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.step-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.tracking-step h4 {
+    margin: 0 0 15px 0;
+    color: #1e293b;
+}
+
+.tracking-step p {
+    margin: 0;
+    color: #64748b;
+}
+
+/* Important Notes */
+.notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.note-card {
+    padding: 25px;
+    border-radius: 15px;
+    border-left: 5px solid;
+}
+
+.note-card.warning {
+    background: #fef3f2;
+    border-left-color: #f04438;
+}
+
+.note-card.info {
+    background: #f0f9ff;
+    border-left-color: #0ea5e9;
+}
+
+.note-card.tip {
+    background: #f0fdf4;
+    border-left-color: #10b981;
+}
+
+.note-card i {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.note-card.warning i { color: #f04438; }
+.note-card.info i { color: #0ea5e9; }
+.note-card.tip i { color: #10b981; }
+
+.note-card h4 {
+    margin: 0 0 10px 0;
+    color: #1e293b;
+}
+
+.note-card p {
+    margin: 0;
+    color: #64748b;
+}
+
+/* FAQ Section */
+.faq-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.faq-item {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.faq-item h4 {
+    margin: 0 0 15px 0;
+    color: #1e293b;
+    font-size: 1.1rem;
+}
+
+.faq-item p {
+    margin: 0;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .shipping-policy {
+        padding: 15px;
+    }
+
+    .policy-header {
+        padding: 30px 20px;
+    }
+
+    .policy-header h1 {
+        font-size: 2rem;
+    }
+
+    .policy-section h2 {
+        font-size: 1.5rem;
+    }
+
+    .shipping-methods,
+    .service-areas,
+    .tracking-info,
+    .notes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .timeline-item {
+        flex-direction: column;
+        text-align: center;
+    }
+}
