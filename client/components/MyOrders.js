@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_URL from '../config/apiConfig';
 import './MyOrders.css';
 import OrderModal from './OrderModal';
 import sessionManager from '../utils/sessionManager';
@@ -26,7 +27,7 @@ const MyOrders = () => {
       }
 
       try {
-        const res = await axios.get('/api/orders', {
+        const res = await axios.get(`${API_URL}/orders`, {
           headers: {
             'x-auth-token': token
           }

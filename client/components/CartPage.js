@@ -9,10 +9,21 @@ const CartPage = () => {
 
     useEffect(() => {
         loadCartItems();
+        
+        // Listen for cart updates from customizer
+        const handleCartUpdate = () => {
+            loadCartItems();
+        };
+        
+        window.addEventListener('cartUpdated', handleCartUpdate);
+        return () => {
+            window.removeEventListener('cartUpdated', handleCartUpdate);
+        };
     }, []);
 
     const loadCartItems = () => {
         const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
+        console.log('Loaded cart items:', savedCart); // Debug log
         setCartItems(savedCart);
         setLoading(false);
     };
@@ -46,9 +57,42 @@ const CartPage = () => {
         localStorage.setItem('cart', JSON.stringify(cart));
     };
 
+    const getItemPrice = (item) => {
+        // Handle different price formats
+        if (typeof item.price === 'number') {
+            return item.price;
+        }
+        if (typeof item.price === 'string') {
+            // Extract number from string like "₹799" or "799"
+            const priceMatch = item.price.replace(/[^0-9.]/g, '');
+            return Number(priceMatch) || 0;
+        }
+        if (item.Price) {
+            const priceMatch = item.Price.replace(/[^0-9.]/g, '');
+            return Number(priceMatch) || 0;
+        }
+        return 0;
+    };
+
+    const getItemName = (item) => {
+        return item.name || item.ProductName || 'Custom Product';
+    };
+
+    const getItemSize = (item) => {
+        return item.size || item.selectedSize || 'M';
+    };
+
+    const getItemImage = (item) => {
+        return item.image || item.imageUrl || '/default-product.jpg';
+    };
+
+    const getItemId = (item) => {
+        return item.id || item.numericId || item.customProductId || Math.random().toString();
+    };
+
     const calculateTotal = () => {
         return cartItems.reduce((total, item) => {
-            const price = Number(item.price) || 0;
+            const price = getItemPrice(item);
             return total + (price * item.quantity);
         }, 0);
     };
@@ -84,49 +128,74 @@ const CartPage = () => {
                         </div>
                         <h2>Your cart is empty</h2>
                         <p>Browse our products and add items to your cart</p>
-                        <button className="continue-shopping-btn"  onClick={() => window.location.href = '/'}>
+                        <button className="continue-shopping-btn" onClick={() => navigate('/')}>
                             Continue Shopping
                         </button>
                     </div>
                 ) : (
                     <div className="cart-content">
                         <div className="cart-items-section">
-                            {cartItems.map((item, index) => (
-                                <div key={`${item.id}-${item.size}-${index}`} className="cart-item">
-                                    <div className="item-image">
-                                        <img src={item.image} alt={item.name} />
-                                    </div>
-                                    <div className="item-details">
-                                        <h3 className="item-name">{item.name}</h3>
-                                        <p className="item-variant">Size: {item.size}</p>
-                                        <p className="item-price">₹{Number(item.price).toLocaleString()}</p>
-                                    </div>
-                                    <div className="quantity-controls">
+                            {cartItems.map((item, index) => {
+                                const itemPrice = getItemPrice(item);
+                                const itemName = getItemName(item);
+                                const itemSize = getItemSize(item);
+                                const itemImage = getItemImage(item);
+                                const itemId = getItemId(item);
+                                
+                                return (
+                                    <div key={`${itemId}-${index}`} className="cart-item">
+                                        <div className="item-image">
+                                            <img 
+                                                src={itemImage} 
+                                                alt={itemName}
+                                                onError={(e) => {
+                                                    e.target.src = '/default-product.jpg';
+                                                }}
+                                            />
+                                            {item.isCustomProduct && (
+                                                <div className="custom-badge">Custom</div>
+                                            )}
+                                        </div>
+                                        <div className="item-details">
+                                            <h3 className="item-name">{itemName}</h3>
+                                            <p className="item-variant">Size: {itemSize}</p>
+                                            <p className="item-price">₹{itemPrice.toLocaleString()}</p>
+                                            {item.isCustomProduct && item.customization && (
+                                                <div className="custom-details">
+                                                    <p className="custom-color">Color: {item.customization.baseColor.toUpperCase()}</p>
+                                                    {item.customization.designImage && (
+                                                        <p className="custom-design">With Custom Design</p>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="quantity-controls">
+                                            <button 
+                                                className="quantity-btn"
+                                                onClick={() => updateQuantity(index, -1)}
+                                            >
+                                                -
+                                            </button>
+                                            <span className="quantity">{item.quantity}</span>
+                                            <button 
+                                                className="quantity-btn"
+                                                onClick={() => updateQuantity(index, 1)}
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                        <div className="item-total">
+                                            ₹{(itemPrice * item.quantity).toLocaleString()}
+                                        </div>
                                         <button 
-                                            className="quantity-btn"
-                                            onClick={() => updateQuantity(index, -1)}
+                                            className="remove-btn"
+                                            onClick={() => removeFromCart(index)}
                                         >
-                                            -
-                                        </button>
-                                        <span className="quantity">{item.quantity}</span>
-                                        <button 
-                                            className="quantity-btn"
-                                            onClick={() => updateQuantity(index, 1)}
-                                        >
-                                            +
+                                            <i className="fas fa-trash"></i>
                                         </button>
                                     </div>
-                                    <div className="item-total">
-                                        ₹{(Number(item.price) * item.quantity).toLocaleString()}
-                                    </div>
-                                    <button 
-                                        className="remove-btn"
-                                        onClick={() => removeFromCart(index)}
-                                    >
-                                        <i className="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         <div className="cart-summary">
@@ -141,7 +210,7 @@ const CartPage = () => {
                                     <span>Free</span>
                                 </div>
                                 <div className="summary-row">
-                                    <span>Tax</span>
+                                    <span>Tax (10%)</span>
                                     <span>₹{(calculateTotal() * 0.1).toLocaleString()}</span>
                                 </div>
                                 <div className="summary-divider"></div>
@@ -155,7 +224,7 @@ const CartPage = () => {
                                 >
                                     Proceed to Checkout
                                 </button>
-                                <button className="continue-shopping-btn" onClick={() => window.location.href = '/'}>
+                                <button className="continue-shopping-btn" onClick={() => navigate('/')}>
                                     Continue Shopping
                                 </button>
                             </div>

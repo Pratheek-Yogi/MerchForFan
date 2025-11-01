@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import API_URL from '../config/apiConfig';
 import './TrendingProducts.css';
 import { getProductImage } from './imageUtils';
 import { triggerCartUpdate } from './CartIcon';
@@ -18,7 +19,7 @@ function TrendingProducts() {
 
             for (const category of categories) {
                 try {
-                    const response = await fetch(`/api/products/category/${category}`);
+                    const response = await fetch(`${API_URL}/products/category/${category}`);
                     const data = await response.json();
                     if (data.success) {
                         fetchedProducts = [...fetchedProducts, ...data.data.slice(0, 2)];

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import API_URL from '../config/apiConfig';
 import './AuthPages.css';
 
 const ForgotPasswordPage = () => {
@@ -15,7 +16,7 @@ const ForgotPasswordPage = () => {
     setMessage('');
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

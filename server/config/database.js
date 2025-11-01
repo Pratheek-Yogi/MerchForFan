@@ -1,8 +1,8 @@
 const { MongoClient } = require('mongodb');
 
 // MongoDB connection configuration
-const MONGODB_URI = 'mongodb+srv://MerchFan:Pratheek2004@userlogin.rzhrkvu.mongodb.net/UserLogin?retryWrites=true&w=majority&appName=userlogin&ssl=true&authSource=admin';
-const DB_NAME = 'UserLogin'; // Using your UserLogin cluster
+const MONGODB_URI = process.env.MONGODB_URI;
+const DB_NAME = process.env.DB_NAME || 'UserLogin'; // Using your UserLogin cluster
 
 class Database {
   constructor() {
@@ -11,6 +11,9 @@ class Database {
   }
 
   async connect() {
+    if (!MONGODB_URI) {
+      throw new Error('FATAL ERROR: MONGODB_URI is not defined in environment variables.');
+    }
     try {
       if (!this.client) {
         console.log('🔌 Attempting to connect to MongoDB...');

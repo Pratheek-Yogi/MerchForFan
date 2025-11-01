@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_URL from '../config/apiConfig';
 import './ShippingTracker.css';
 
 const ShippingTracker = () => {
@@ -44,7 +45,7 @@ const ShippingTracker = () => {
 
         try {
             // Replace with your actual ShipRocket API endpoint
-            const response = await fetch('/api/shiprocket/track', {
+            const response = await fetch(`${API_URL}/shiprocket/track`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

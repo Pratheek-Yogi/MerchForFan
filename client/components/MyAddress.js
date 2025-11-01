@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_URL from '../config/apiConfig';
 import './MyAddress.css';
 
 const MyAddress = () => {
@@ -23,7 +24,7 @@ const MyAddress = () => {
             setLoading(true);
             const token = localStorage.getItem('token');
             
-            const response = await fetch('http://localhost:5000/api/user/address', {
+            const response = await fetch(`${API_URL}/user/address`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -63,7 +64,7 @@ const MyAddress = () => {
 
             if (editingAddress) {
                 // Update existing address
-                response = await fetch(`http://localhost:5000/api/user/address/${editingAddress._id}`, {
+                response = await fetch(`${API_URL}/user/address/${editingAddress._id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -73,7 +74,7 @@ const MyAddress = () => {
                 });
             } else {
                 // Add new address
-                response = await fetch('http://localhost:5000/api/user/address', {
+                response = await fetch(`${API_URL}/user/address`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -114,7 +115,7 @@ const MyAddress = () => {
         if (window.confirm('Are you sure you want to delete this address?')) {
             try {
                 const token = localStorage.getItem('token');
-                const response = await fetch(`http://localhost:5000/api/user/address/${addressId}`, {
+                const response = await fetch(`${API_URL}/user/address/${addressId}`, {
                     method: 'DELETE',
                     headers: {
                         'x-auth-token': token
@@ -139,7 +140,7 @@ const MyAddress = () => {
     const setDefaultAddress = async (addressId) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:5000/api/user/address/${addressId}/default`, {
+            const response = await fetch(`${API_URL}/user/address/${addressId}/default`, {
                 method: 'PATCH',
                 headers: {
                     'x-auth-token': token

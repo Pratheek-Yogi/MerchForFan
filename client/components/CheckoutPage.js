@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_URL from '../config/apiConfig';
 import './CheckoutPage.css';
 
 const CheckoutPage = () => {
@@ -62,7 +63,7 @@ const CheckoutPage = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:5000/api/user/address', {
+            const response = await fetch(`${API_URL}/user/address`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -154,7 +155,7 @@ const CheckoutPage = () => {
             };
 
             // Save order to database using your existing route
-            const response = await fetch('http://localhost:5000/api/orders/create', {
+            const response = await fetch(`${API_URL}/orders/create`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -190,7 +191,7 @@ const CheckoutPage = () => {
     const saveNewAddress = async (newAddress) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/user/address', {
+            const response = await fetch(`${API_URL}/user/address`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

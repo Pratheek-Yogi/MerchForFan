@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { OAuth2Client } = require('google-auth-library');
 const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('./config/jwt');
 const config = require('./config/googleAuth');
 const database = require('./config/database');
 const User = require('./models/User');
@@ -16,7 +18,18 @@ const PORT = process.env.PORT || 5000;
 const client = new OAuth2Client(config.googleClientId);
 
 // Middleware
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '').split(',');
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
@@ -25,7 +38,6 @@ app.use('/api/orders', ordersRoutes);
 app.use('/api/products', require('./routes/products'));
 app.use('/api/user', require('./routes/profile'));
 app.use('/api/user/address', require('./routes/address'));
-app.use('/api/user', require('./routes/address'));
 
 app.get('/api/hello', (req, res) => {
     res.json({ message: 'Hello from Express.js server!' });
@@ -76,7 +88,6 @@ app.post('/api/auth/signup', async (req, res) => {
         console.log('User created successfully:', { userId, email });
 
         // Sign a JWT
-        const JWT_SECRET = 'your_jwt_secret_key_here';
         const signupPayload = { user: { id: userId } };
         const token = jwt.sign(signupPayload, JWT_SECRET, { expiresIn: '1h' });
 
@@ -121,7 +132,6 @@ app.post('/api/auth/login', async (req, res) => {
         console.log('User authenticated successfully:', { email });
 
         // Sign a JWT
-        const JWT_SECRET = 'your_jwt_secret_key_here';
         const loginPayload = { user: { id: authResult.user._id } };
         const token = jwt.sign(loginPayload, JWT_SECRET, { expiresIn: '1h' });
 
@@ -144,30 +154,7 @@ app.post('/api/auth/google', async (req, res) => {
         return res.status(400).json({ error: 'ID token is missing.' });
     }
 
-    // Handle both real Google OAuth and demo mode
     try {
-        // Check if this is a demo token
-        if (idToken.includes('demo_token_')) {
-            const demoUser = {
-                id: 'demo_user_123',
-                email: 'demo@merchfan.com',
-                firstName: 'Demo',
-                lastName: 'User',
-                name: 'Demo User',
-                picture: 'https://via.placeholder.com/150',
-                provider: 'demo'
-            };
-
-            console.log('Demo authentication successful:', demoUser);
-
-            return res.status(200).json({
-                message: 'Demo authentication successful',
-                user: demoUser,
-                token: `demo_token_${Date.now()}`
-            });
-        }
-
-        // For real Google OAuth, verify the token with Google
         const ticket = await client.verifyIdToken({
             idToken: idToken,
             audience: config.googleClientId,
@@ -196,7 +183,6 @@ app.post('/api/auth/google', async (req, res) => {
         console.log("Google authentication successful:", result.user);
 
         // Sign a JWT
-        const JWT_SECRET = 'your_jwt_secret_key_here';
         const googlePayload = { user: { id: result.user._id } };
         const token = jwt.sign(googlePayload, JWT_SECRET, { expiresIn: '1h' });
 
@@ -230,16 +216,12 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         // Generate reset code
         const result = await PasswordReset.generateResetCode(email);
 
-        // In a real application, you would send the code via email
-        // For now, we'll log it to console for testing
-        console.log(`🔐 Password reset code for ${email}: ${result.code}`);
-        console.log(`⏰ Code expires at: ${result.expiresAt}`);
+        // In a real application, you would send the code via email.
+        // For example, using a service like Nodemailer or SendGrid.
+        // sendPasswordResetEmail(email, result.code);
 
         res.json({
-            message: 'Password reset code sent to your email',
-            // In development, include the code for testing
-            code: result.code,
-            expiresAt: result.expiresAt
+            message: 'Password reset code sent to your email'
         });
     } catch (error) {
         console.error('Forgot password error:', error);
@@ -306,7 +288,6 @@ const startServer = async () => {
     await database.connect();
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
-      console.log(`Visit http://localhost:${PORT} to see your React app`);
     });
   } catch (error) {
     console.error('Failed to connect to the database. Server not started.', error);

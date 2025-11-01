@@ -1,41 +1,58 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DecalGeometry } from 'three/examples/jsm/geometries/DecalGeometry';
 
-// Shared scene and camera (kept outside to avoid re-creating on every render)
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 1000);
-const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
-
-function HoodieCanvas({ color, textureImage, decalScale = 1.2, decalPositionX, decalPositionY = 0.1, onModelLoad }) {
+const HoodieCanvas = forwardRef(({ color, textureImage, decalScale = 1.2, decalPositionX, decalPositionY = 0.1, onModelLoad }, ref) => {
   const mountRef = useRef(null);
+  const canvasRef = useRef(null);
   const decalRef = useRef(null);
   const [hoodieMesh, setHoodieMesh] = useState(null);
   const rendererRef = useRef(null);
   const controlsRef = useRef(null);
+  const sceneRef = useRef(new THREE.Scene());
+  const cameraRef = useRef(new THREE.PerspectiveCamera(35, 1, 0.1, 1000));
+  const materialRef = useRef(new THREE.MeshStandardMaterial({ color: 0xffffff }));
   const onModelLoadRef = useRef(onModelLoad);
 
-  // Keep the onModelLoad callback reference up-to-date without re-triggering the main effect
+  // Expose canvas via ref
+  useImperativeHandle(ref, () => ({
+    getCanvas: () => canvasRef.current
+  }));
+
+  // Keep the onModelLoad callback reference up-to-date
   useEffect(() => {
     onModelLoadRef.current = onModelLoad;
   }, [onModelLoad]);
 
-  // Effect for initialization and cleanup - runs only once
+  // Effect for initialization and cleanup
   useEffect(() => {
     const mount = mountRef.current;
+    const scene = sceneRef.current;
+    const camera = cameraRef.current;
+    const material = materialRef.current;
+    
     if (!mount) return;
 
     // Set background
     scene.background = new THREE.Color(0xf2f2f5);
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    // Create canvas element
+    const canvas = document.createElement('canvas');
+    canvasRef.current = canvas;
+    canvas.style.display = 'block';
+    mount.appendChild(canvas);
+
+    // Renderer with preserveDrawingBuffer for image capture
+    const renderer = new THREE.WebGLRenderer({ 
+      canvas,
+      antialias: true, 
+      powerPreference: 'high-performance',
+      preserveDrawingBuffer: true // CRITICAL FOR IMAGE CAPTURE
+    });
     rendererRef.current = renderer;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.domElement.style.display = 'block';
-    mount.appendChild(renderer.domElement);
 
     // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -46,17 +63,14 @@ function HoodieCanvas({ color, textureImage, decalScale = 1.2, decalPositionX, d
     controlsRef.current = controls;
 
     // Lighting
-    if (!scene.getObjectByName('ambientLight')) {
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-      ambientLight.name = 'ambientLight';
-      scene.add(ambientLight);
-    }
-    if (!scene.getObjectByName('directionalLight')) {
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
-      directionalLight.name = 'directionalLight';
-      directionalLight.position.set(2, 2, 5);
-      scene.add(directionalLight);
-    }
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    ambientLight.name = 'ambientLight';
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    directionalLight.name = 'directionalLight';
+    directionalLight.position.set(2, 2, 5);
+    scene.add(directionalLight);
 
     // Resize handler
     const handleResize = () => {
@@ -85,7 +99,7 @@ function HoodieCanvas({ color, textureImage, decalScale = 1.2, decalPositionX, d
     // Load model
     const loader = new GLTFLoader();
     loader.load(
-      '/3Dobjects/source/hoodie.glb', // Changed to hoodie model
+      '/assets/source/hoodie.glb',
       (gltf) => {
         const object = gltf.scene;
         let mesh = null;
@@ -151,25 +165,27 @@ function HoodieCanvas({ color, textureImage, decalScale = 1.2, decalPositionX, d
         controlsRef.current = null;
       }
       if (rendererRef.current) {
-        const dom = rendererRef.current.domElement;
-        if (mount && dom && mount.contains(dom)) mount.removeChild(dom);
         rendererRef.current.dispose();
         rendererRef.current = null;
       }
-      // Clean up scene objects
-      const model = scene.getObjectByName('hoodie_model');
-      if (model) scene.remove(model);
-      if (decalRef.current) scene.remove(decalRef.current);
+      if (canvasRef.current && mount.contains(canvasRef.current)) {
+        mount.removeChild(canvasRef.current);
+      }
+      
+      // Clean up scene
+      scene.clear();
     };
   }, []);
 
   // Update material color when prop changes
   useEffect(() => {
-    if (material) material.color.set(color || '#ffffff');
+    if (materialRef.current) materialRef.current.color.set(color || '#ffffff');
   }, [color]);
 
   // Apply decal texture when uploaded
   useEffect(() => {
+    const scene = sceneRef.current;
+    
     // Clean up the previous decals
     if (decalRef.current && Array.isArray(decalRef.current)) {
       decalRef.current.forEach(decal => {
@@ -199,8 +215,8 @@ function HoodieCanvas({ color, textureImage, decalScale = 1.2, decalPositionX, d
           polygonOffsetFactor: -4,
         });
 
-        const position = new THREE.Vector3(decalPositionX, decalPositionY, 0.5); // Position the decal on the front
-        const orientation = new THREE.Euler(); // Default orientation
+        const position = new THREE.Vector3(decalPositionX, decalPositionY, 0.5);
+        const orientation = new THREE.Euler();
         const size = new THREE.Vector3(decalScale, decalScale, 1);
 
         const decalGeometry = new DecalGeometry(hoodieMesh, position, orientation, size);
@@ -211,7 +227,6 @@ function HoodieCanvas({ color, textureImage, decalScale = 1.2, decalPositionX, d
       });
     }
   }, [textureImage, hoodieMesh, decalPositionX, decalPositionY, decalScale]);
-
 
   return (
     <div
@@ -224,6 +239,6 @@ function HoodieCanvas({ color, textureImage, decalScale = 1.2, decalPositionX, d
       }}
     />
   );
-}
+});
 
 export default HoodieCanvas;

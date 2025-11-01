@@ -3,6 +3,7 @@ import jsPDF from 'jspdf';
 import './MerchCustomizer.css';
 import TshirtCanvas from './TshirtCanvas';
 import HoodieCanvas from './HoodieCanvas';
+import API_URL from '../config/apiConfig';
 
 function MerchCustomizer() {
   const [color, setColor] = useState('#ffffff');
@@ -12,11 +13,30 @@ function MerchCustomizer() {
   const [decalPositionX, setDecalPositionX] = useState(0);
   const [decalPositionY, setDecalPositionY] = useState(0);
   const [isModelLoading, setIsModelLoading] = useState(true);
+  const [selectedSize, setSelectedSize] = useState('M');
+  const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const canvasRef = useRef(null);
+  const tshirtCanvasRef = useRef(null);
+  const hoodieCanvasRef = useRef(null);
 
   const modelDefaults = {
-    tshirt: { scale: 1, posX: 0, posY: 0 },
-    hoodie: { scale: 0.6, posX: 0, posY: -0.1 },
+    tshirt: { 
+      scale: 1, 
+      posX: 0, 
+      posY: 0, 
+      price: 799, 
+      name: 'Custom T-Shirt',
+      numericIdPrefix: 1000
+    },
+    hoodie: { 
+      scale: 0.6, 
+      posX: 0, 
+      posY: -0.1, 
+      price: 1199, 
+      name: 'Custom Hoodie',
+      numericIdPrefix: 1100
+    },
   };
 
   useEffect(() => {
@@ -36,15 +56,60 @@ function MerchCustomizer() {
     setTextureImage(null);
   };
 
-  const downloadPdf = () => {
-    const canvas = canvasRef.current?.querySelector('canvas');
-    if (canvas) {
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const width = pdf.internal.pageSize.getWidth();
-      const height = pdf.internal.pageSize.getHeight();
-      pdf.addImage(imgData, 'PNG', 10, 10, width - 20, height - 20);
-      pdf.save('custom-design.pdf');
+  // Get the active canvas component reference
+  const getActiveCanvasRef = () => {
+    return selectedModel === 'tshirt' ? tshirtCanvasRef : hoodieCanvasRef;
+  };
+
+  // Capture canvas as JPG - FIXED VERSION
+  const captureDesignImage = () => {
+    const activeCanvasRef = getActiveCanvasRef();
+    
+    if (activeCanvasRef.current) {
+      // For Three.js canvases, we need to use the renderer's domElement
+      const canvas = activeCanvasRef.current.getCanvas ? activeCanvasRef.current.getCanvas() : null;
+      
+      if (canvas) {
+        try {
+          // Add a small delay to ensure the scene is fully rendered
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              const imageData = canvas.toDataURL('image/jpeg', 0.9);
+              resolve(imageData);
+            }, 100);
+          });
+        } catch (error) {
+          console.error('Error capturing canvas:', error);
+          return null;
+        }
+      }
+    }
+    
+    // Fallback: try to find canvas in DOM
+    const canvasElement = canvasRef.current?.querySelector('canvas');
+    if (canvasElement) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const imageData = canvasElement.toDataURL('image/jpeg', 0.9);
+          resolve(imageData);
+        }, 100);
+      });
+    }
+    
+    return Promise.resolve(null);
+  };
+
+  const downloadImage = async () => {
+    const imageData = await captureDesignImage();
+    if (imageData) {
+      const link = document.createElement('a');
+      link.href = imageData;
+      link.download = `custom-${selectedModel}-design.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      alert('Unable to capture design image. Please try again.');
     }
   };
 
@@ -55,6 +120,125 @@ function MerchCustomizer() {
     setDecalScale(defaults.scale);
     setDecalPositionX(defaults.posX);
     setDecalPositionY(defaults.posY);
+    setQuantity(1);
+    setSelectedSize('M');
+  };
+
+  const handleQuantityChange = (amount) => {
+    setQuantity(prevQuantity => Math.max(1, prevQuantity + amount));
+  };
+
+  const handleSizeSelect = (size) => {
+    setSelectedSize(size);
+  };
+
+  // Generate unique numeric ID for custom product
+  const generateCustomNumericId = () => {
+    const defaults = modelDefaults[selectedModel];
+    const randomSuffix = Math.floor(Math.random() * 99) + 1; // 1-99
+    return defaults.numericIdPrefix + randomSuffix;
+  };
+
+  // Create custom product object for cart
+  const createCustomProduct = async () => {
+    const defaults = modelDefaults[selectedModel];
+    const designImage = await captureDesignImage();
+    const customNumericId = generateCustomNumericId();
+    
+    if (!designImage) {
+      throw new Error('Unable to capture design image. Please try again.');
+    }
+    
+    return {
+      // Custom product identification
+      isCustomProduct: true,
+      customProductId: `custom_${selectedModel}_${Date.now()}`,
+      
+      // STANDARD FIELDS THAT MATCH CART EXPECTATIONS
+      id: customNumericId,
+      name: `${defaults.name}${textureImage ? ' (Custom Design)' : ' (Solid Color)'}`,
+      price: defaults.price,
+      size: selectedSize,
+      quantity: quantity,
+      image: designImage,
+      
+      // Additional fields for compatibility
+      numericId: customNumericId,
+      ProductName: `${defaults.name}${textureImage ? ' (Custom Design)' : ' (Solid Color)'}`,
+      Price: `₹${defaults.price}`,
+      Category: 'Custom',
+      
+      // Customization details
+      customization: {
+        modelType: selectedModel,
+        baseColor: color,
+        designImage: textureImage,
+        designScale: decalScale,
+        designPosition: { x: decalPositionX, y: decalPositionY },
+        designPreview: designImage,
+        timestamp: new Date().toISOString()
+      }
+    };
+  };
+
+  const addToCart = async () => {
+    setIsAddingToCart(true);
+    
+    try {
+      const customProduct = await createCustomProduct();
+      
+      // Get existing cart
+      const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
+      
+      // Check if similar custom product already exists
+      const existingIndex = existingCart.findIndex(item => 
+        item.isCustomProduct && 
+        item.customization.modelType === customProduct.customization.modelType &&
+        item.customization.baseColor === customProduct.customization.baseColor &&
+        item.customization.designImage === customProduct.customization.designImage &&
+        item.size === customProduct.size
+      );
+      
+      if (existingIndex !== -1) {
+        // Update quantity if similar product exists
+        existingCart[existingIndex].quantity += customProduct.quantity;
+      } else {
+        // Add new custom product
+        existingCart.push(customProduct);
+      }
+      
+      // Save to localStorage
+      localStorage.setItem('cart', JSON.stringify(existingCart));
+      
+      // Optional: Send to backend if needed
+      try {
+        await fetch(`${API_URL}/cart/add-custom`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(customProduct),
+        });
+      } catch (backendError) {
+        console.log('Custom product saved locally (backend unavailable)');
+      }
+      
+      // Show success message
+      alert('✅ Custom product added to cart!');
+      
+      // Trigger cart update event for other components
+      window.dispatchEvent(new Event('cartUpdated'));
+      
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert(`Failed to add product to cart: ${error.message}`);
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const getCurrentPrice = () => {
+    return modelDefaults[selectedModel].price;
   };
 
   return (
@@ -77,6 +261,49 @@ function MerchCustomizer() {
             >
               🧥 Hoodie
             </button>
+          </div>
+          <div className="price-display">
+            Price: ₹{getCurrentPrice()}
+          </div>
+        </div>
+
+        {/* Size & Quantity */}
+        <div className="section">
+          <div className="section-title">Size & Quantity</div>
+          
+          <div className="row">
+            <label>Size:</label>
+            <div className="size-options">
+              {['S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                <button
+                  key={size}
+                  className={`size-btn ${selectedSize === size ? 'active' : ''}`}
+                  onClick={() => handleSizeSelect(size)}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="row">
+            <label>Quantity:</label>
+            <div className="quantity-controls">
+              <button 
+                onClick={() => handleQuantityChange(-1)}
+                disabled={quantity <= 1}
+                className="quantity-btn"
+              >
+                -
+              </button>
+              <span className="quantity-display">{quantity}</span>
+              <button 
+                onClick={() => handleQuantityChange(1)}
+                className="quantity-btn"
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
 
@@ -176,17 +403,26 @@ function MerchCustomizer() {
 
         {/* Actions */}
         <div className="section">
-          <div className="section-title">Export & Reset</div>
+          <div className="section-title">Export & Cart</div>
           <div className="row">
-            <button className="btn primary" onClick={downloadPdf}>
-              📥 Download PDF
+            <button 
+              className="btn primary large" 
+              onClick={addToCart}
+              disabled={isAddingToCart || isModelLoading}
+            >
+              {isAddingToCart ? 'Adding to Cart...' : '🛒 Add to Cart'}
+            </button>
+          </div>
+          <div className="row">
+            <button className="btn" onClick={downloadImage}>
+              📥 Download JPG
             </button>
             <button className="btn" onClick={resetCustomization}>
               🔄 Reset All
             </button>
           </div>
           <div className="hint">
-            Download your custom design as a high-quality PDF for printing
+            Add your custom design to cart or download as JPG for printing reference
           </div>
         </div>
       </div>
@@ -214,6 +450,7 @@ function MerchCustomizer() {
 
         {selectedModel === 'tshirt' ? (
           <TshirtCanvas
+            ref={tshirtCanvasRef}
             color={color}
             textureImage={textureImage}
             decalScale={decalScale}
@@ -223,6 +460,7 @@ function MerchCustomizer() {
           />
         ) : (
           <HoodieCanvas
+            ref={hoodieCanvasRef}
             color={color}
             textureImage={textureImage}
             decalScale={decalScale}

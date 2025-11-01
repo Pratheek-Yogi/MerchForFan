@@ -7,18 +7,13 @@ module.exports = function(req, res, next) {
     return res.status(401).json({ msg: 'No token, authorization denied' });
   }
 
-  // TEMPORARY: Accept any token for testing
-  console.log('Token received:', token);
-  
-  if (token.startsWith('google_jwt_') || token.startsWith('demo_token_')) {
-    // Accept Google/demo tokens temporarily
-    req.user = { id: 'demo_user_id' };
-    return next();
-  }
-
-  // Original JWT verification for other tokens
   try {
-    const JWT_SECRET = 'your_jwt_secret_key_here';
+    // It's crucial to use an environment variable for the JWT secret in production
+    const JWT_SECRET = process.env.JWT_SECRET;
+    if (!JWT_SECRET) {
+      console.error('FATAL ERROR: JWT_SECRET is not defined.');
+      return res.status(500).send('Internal Server Error.');
+    }
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded.user;
     next();

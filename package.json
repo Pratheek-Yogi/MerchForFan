@@ -8,6 +8,7 @@
     "server": "node server/index.js",
     "client": "webpack serve --mode development",
     "build": "webpack --mode production",
+    "analyze": "webpack --mode production --env analyze",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -15,18 +16,15 @@
   "license": "ISC",
   "description": "",
   "proxy": "http://localhost:5000",
-  "overrides": {
-    "three": "^0.180.0"
-  },
   "dependencies": {
     "assert": "^2.1.0",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "browserify-zlib": "^0.2.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "google-auth-library": "^10.4.0",
-    "https-browserify": "^1.0.0",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^3.0.3",
     "mongodb": "^6.20.0",
@@ -42,14 +40,19 @@
   },
   "devDependencies": {
     "@babel/core": "^7.28.4",
+    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
     "@babel/preset-env": "^7.28.3",
     "@babel/preset-react": "^7.27.1",
     "babel-loader": "^10.0.0",
     "concurrently": "^9.2.1",
+    "copy-webpack-plugin": "^13.0.1",
     "css-loader": "^7.1.2",
     "html-webpack-plugin": "^5.6.4",
+    "https-browserify": "^1.0.0",
+    "mini-css-extract-plugin": "^2.9.4",
     "style-loader": "^4.0.0",
     "webpack": "^5.101.3",
+    "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.2"
   }

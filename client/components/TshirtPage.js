@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getProductImage } from './imageUtils';
+import API_URL from '../config/apiConfig';
 import './TshirtPage.css';
 
 const TshirtPage = () => {
@@ -17,7 +18,7 @@ const TshirtPage = () => {
             setLoading(true);
             setError('');
             
-            const response = await fetch('/api/products/search/shirt');
+            const response = await fetch(`${API_URL}/products/search/shirt`);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch t-shirts');

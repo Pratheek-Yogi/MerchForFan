@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getProductImage } from './imageUtils';
+import API_URL from '../config/apiConfig';
 import './CapsPage.css';
 
 const CapsPage = () => {
@@ -17,7 +18,7 @@ const CapsPage = () => {
             setLoading(true);
             setError('');
             
-            const response = await fetch('/api/products/search/cap');
+            const response = await fetch(`${API_URL}/products/search/cap`);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch caps');

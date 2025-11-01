@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import config from '../config/googleAuth';
+import API_URL from '../config/apiConfig';
 
 function GoogleSignIn({ onSuccess, onError, disabled = false }) {
   const googleButtonRef = useRef(null);
@@ -113,7 +114,7 @@ function GoogleSignIn({ onSuccess, onError, disabled = false }) {
 
     try {
       // Send the ID token to your backend for verification
-      const backendResponse = await fetch('/api/auth/google', {
+      const backendResponse = await fetch(`${API_URL}/auth/google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

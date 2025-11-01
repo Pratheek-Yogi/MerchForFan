@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { debounce } from './debounce';
 import { getProductImage } from './imageUtils';
+import API_URL from '../config/apiConfig';
 import './SearchPage.css';
 
 function SearchPage() {
@@ -21,7 +22,7 @@ function SearchPage() {
 
       setLoading(true);
       try {
-        const response = await fetch(`/api/products/search/${encodeURIComponent(searchQuery)}`);
+        const response = await fetch(`${API_URL}/products/search/${encodeURIComponent(searchQuery)}`);
         const data = await response.json();
         if (data.success) {
           setResults(data.data);

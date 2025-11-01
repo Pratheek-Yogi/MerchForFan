@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './HotSalePage.css';
 import { getProductImage } from './imageUtils';
+import API_URL from '../config/apiConfig';
 
 const HotSalePage = () => {
     const [products, setProducts] = useState([]);
@@ -10,7 +11,7 @@ const HotSalePage = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await fetch('/api/products/hotsale');
+                const response = await fetch(`${API_URL}/products/hotsale`);
                 const data = await response.json();
                 if (data.success) {
                     setProducts(data.data);

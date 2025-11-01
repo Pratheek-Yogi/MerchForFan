@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import './AuthPages.css';
 import GoogleSignIn from './GoogleSignIn';
 import sessionManager from '../utils/sessionManager';
+import API_URL from '../config/apiConfig';
 
 function LoginPage() {
   const [formData, setFormData] = useState({
@@ -71,7 +72,7 @@ function LoginPage() {
     }
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

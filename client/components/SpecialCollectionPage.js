@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getProductImage } from './imageUtils';
+import API_URL from '../config/apiConfig';
 import './SpecialCollectionPage.css';
 
 const SpecialCollectionPage = () => {
@@ -28,7 +29,7 @@ const SpecialCollectionPage = () => {
       setCategoryName(sportName);
 
       // Fetch from Limited Collection category with specific Sport
-      const response = await fetch(`/api/products/limited-collection/${sportName}`);
+      const response = await fetch(`${API_URL}/products/limited-collection/${sportName}`);
       const data = await response.json();
       
       if (data.success) {

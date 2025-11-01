@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getProductImage } from './imageUtils';
+import API_URL from '../config/apiConfig';
 import './CricketPage.css';
 
 const BasketballPage = () => {
@@ -13,7 +14,7 @@ const BasketballPage = () => {
 
   const fetchBasketballProducts = async () => {
     try {
-      const response = await fetch('/api/products/category/Basketball');
+      const response = await fetch(`${API_URL}/products/category/Basketball`);
       const data = await response.json();
       
       if (data.success) {

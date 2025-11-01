@@ -336,4 +336,105 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// GET /api/products/:id/related - Get related products (SIMPLE VERSION)
+router.get('/:id/related', async (req, res) => {
+    try {
+        const db = await database.connect();
+        const productsCollection = db.collection('Product_Details');
+        
+        console.log('🔍 Finding related products for ID:', req.params.id);
+        
+        // First, get the source product
+        let sourceProduct;
+        const sourceId = parseInt(req.params.id);
+
+        console.log('📊 Parsed ID:', sourceId);
+
+        if (!isNaN(sourceId)) {
+            sourceProduct = await productsCollection.findOne({ 
+                numericId: sourceId 
+            });
+            console.log('✅ Found by numericId:', sourceProduct ? 'Yes' : 'No');
+        }
+
+        // If not found by numericId, try by MongoDB _id
+        if (!sourceProduct) {
+            try {
+                sourceProduct = await productsCollection.findOne({ 
+                    _id: new ObjectId(req.params.id) 
+                });
+                console.log('✅ Found by _id:', sourceProduct ? 'Yes' : 'No');
+            } catch (error) {
+                console.log('❌ Invalid ObjectId format');
+            }
+        }
+
+        if (!sourceProduct) {
+            console.log('❌ Source product not found');
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Source product not found' 
+            });
+        }
+
+        console.log('🎯 Source product found:', {
+            name: sourceProduct.ProductName,
+            category: sourceProduct.Category,
+            athlete: sourceProduct.Athlete,
+            numericId: sourceProduct.numericId
+        });
+
+        // SIMPLE APPROACH: Get products from same category, excluding current product
+        const relatedProducts = await productsCollection.find({
+            Category: sourceProduct.Category,
+            numericId: { $ne: sourceProduct.numericId }
+        }).limit(4).toArray();
+
+        console.log(`📦 Found ${relatedProducts.length} related products in same category`);
+
+        // If we don't have enough same-category products, add some from similar categories
+        if (relatedProducts.length < 4) {
+            console.log('🔄 Not enough related products, fetching from similar categories...');
+            
+            // Define category mappings (e.g., Football -> Sports)
+            const categoryGroups = {
+                'Football': ['Sports', 'Athletic'],
+                'Cricket': ['Sports', 'Athletic'], 
+                'Basketball': ['Sports', 'Athletic'],
+                'Caps': ['Accessories', 'Headwear'],
+                'T-Shirts': ['Clothing', 'Apparel']
+            };
+
+            const fallbackCategories = categoryGroups[sourceProduct.Category] || ['Sports'];
+            
+            const additionalProducts = await productsCollection.find({
+                Category: { $in: fallbackCategories },
+                numericId: { $ne: sourceProduct.numericId },
+                _id: { $nin: relatedProducts.map(p => p._id) } // Exclude already selected
+            }).limit(4 - relatedProducts.length).toArray();
+
+            relatedProducts.push(...additionalProducts);
+            console.log(`📦 Added ${additionalProducts.length} fallback products`);
+        }
+
+        res.json({
+            success: true,
+            data: relatedProducts,
+            sourceProduct: {
+                name: sourceProduct.ProductName,
+                category: sourceProduct.Category
+            }
+        });
+
+    } catch (error) {
+        console.error('💥 ERROR in related products route:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch related products: ' + error.message,
+            error: error.toString()
+        });
+    }
+});
+
+
 module.exports = router;

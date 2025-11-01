@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getProductImage } from './imageUtils';
+import API_URL from '../config/apiConfig';
 import './LimitedEditionPage.css';
 
 const LimitedEditionPage = () => {
@@ -13,7 +14,7 @@ const LimitedEditionPage = () => {
 
   const fetchLimitedEditionProducts = async () => {
     try {
-      const response = await fetch('/api/products/category/Limited Edition');
+      const response = await fetch(`${API_URL}/products/category/Limited Edition`);
       const data = await response.json();
       
       if (data.success) {

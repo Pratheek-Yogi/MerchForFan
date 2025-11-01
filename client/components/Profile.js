@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_URL from '../config/apiConfig';
 import './Profile.css';
 
 const Profile = () => {
@@ -19,7 +20,7 @@ const Profile = () => {
             setError('');
             const token = localStorage.getItem('token');
             
-            const response = await fetch('http://localhost:5000/api/user/profile', {
+            const response = await fetch(`${API_URL}/user/profile`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -70,7 +71,7 @@ const Profile = () => {
                 smsNotifications: formData.smsNotifications
             };
 
-            const response = await fetch('http://localhost:5000/api/user/profile', {
+            const response = await fetch(`${API_URL}/user/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { popularAthletes, getProductImage } from './imageUtils';
+import API_URL from '../config/apiConfig';
 import './PopularAthletePage.css';
 
 const PopularAthletePage = () => {
@@ -25,7 +26,7 @@ const PopularAthletePage = () => {
             
             // Use lowercase to match database
             const athleteNameForAPI = athlete.name.toLowerCase();
-            const response = await fetch(`/api/products/athlete/${athleteNameForAPI}`);
+            const response = await fetch(`${API_URL}/products/athlete/${athleteNameForAPI}`);
             const data = await response.json();
             
             console.log('API Response:', data);

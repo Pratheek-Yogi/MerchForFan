@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getProductImage } from './imageUtils';
+import API_URL from '../config/apiConfig';
 import './KidsPage.css';
 
 const KidsPage = () => {
@@ -17,7 +18,7 @@ const KidsPage = () => {
             setLoading(true);
             setError('');
             
-            const response = await fetch('/api/products/search/kid');
+            const response = await fetch(`${API_URL}/products/search/kid`);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch kids products');

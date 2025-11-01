@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import API_URL from '../config/apiConfig';
 import './AuthPages.css';
 import GoogleSignIn from './GoogleSignIn';
 import sessionManager from '../utils/sessionManager';
@@ -90,7 +91,7 @@ function SignupPage() {
     }
 
     try {
-      const response = await fetch('/api/auth/signup', {
+      const response = await fetch(`${API_URL}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

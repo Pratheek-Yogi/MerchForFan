@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import API_URL from '../config/apiConfig';
 import './AuthPages.css';
 
 const ResetPasswordPage = () => {
@@ -49,7 +50,7 @@ const ResetPasswordPage = () => {
     }
 
     try {
-      const response = await fetch('/api/auth/reset-password', {
+      const response = await fetch(`${API_URL}/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
