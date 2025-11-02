@@ -2,6 +2,10 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const webpack = require('webpack');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 module.exports = (env, argv) => {
   const isProduction = argv.mode === 'production';
@@ -69,6 +73,9 @@ module.exports = (env, argv) => {
           }
         ],
       }),
+      new webpack.DefinePlugin({
+        'process.env.GOOGLE_CLIENT_ID': JSON.stringify(process.env.GOOGLE_CLIENT_ID)
+      })
     ].concat(isProduction ? [new MiniCssExtractPlugin({
         filename: '[name].[contenthash].css',
     })] : []),
