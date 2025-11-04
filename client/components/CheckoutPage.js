@@ -3,6 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import API_URL from '../config/apiConfig';
 import './CheckoutPage.css';
 
+// Load Razorpay script dynamically
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => {
+      resolve(true);
+    };
+    script.onerror = () => {
+      resolve(false);
+    };
+    document.body.appendChild(script);
+  });
+};
+
 const CheckoutPage = () => {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
@@ -14,81 +29,100 @@ const CheckoutPage = () => {
     const [loading, setLoading] = useState(true);
     const [cartItems, setCartItems] = useState([]);
     const [placingOrder, setPlacingOrder] = useState(false);
+    const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+    const [newAddress, setNewAddress] = useState({
+        fullName: '',
+        phone: '',
+        addressLine1: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        addressType: 'Home',
+    });
 
-    // Load addresses and cart items
+    // Load addresses, cart items, and Razorpay script
     useEffect(() => {
         loadCartItems();
         fetchAddresses();
+        initializeRazorpay();
     }, []);
 
+    const initializeRazorpay = async () => {
+        const loaded = await loadRazorpayScript();
+        setRazorpayLoaded(loaded);
+        if (!loaded) {
+            console.error('Failed to load Razorpay SDK');
+        }
+    };
+
     const loadCartItems = () => {
-        const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
-        setCartItems(savedCart);
-        calculateOrderSummary(savedCart);
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        setCartItems(cart);
+        calculateOrderSummary(cart);
+        setLoading(false);
     };
 
     const calculateOrderSummary = (items) => {
-        const subtotal = items.reduce((total, item) => {
-            const price = Number(item.price) || 0;
-            return total + (price * item.quantity);
-        }, 0);
-        
-        const shipping = subtotal > 500 ? 0 : 50;
-        const tax = subtotal * 0.1;
-        const total = subtotal + shipping + tax;
-
+        if (items.length === 0) {
+            setOrderSummary(null);
+            return;
+        }
+        const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+        const shipping = subtotal > 1000 ? 0 : 50; // Example: Free shipping over 1000
+        const total = subtotal + shipping;
         setOrderSummary({
-            items: items.map(item => ({
-                product: item.id, // This will be the product ID
-                name: item.name,
-                quantity: item.quantity,
-                price: Number(item.price),
-                size: item.size // Include size in items
-            })),
-            subtotal: Math.round(subtotal),
-            shipping: shipping,
-            tax: Math.round(tax),
-            total: Math.round(total)
+            items,
+            subtotal,
+            shipping,
+            total,
         });
     };
 
     const fetchAddresses = async () => {
         try {
-            setLoading(true);
             const token = localStorage.getItem('token');
-            
-            if (!token) {
-                console.log('No token found');
-                setLoading(false);
-                return;
-            }
-
-            const response = await fetch(`${API_URL}/user/address`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-auth-token': token
-                }
+            if (!token) return;
+            const response = await fetch(`${API_URL}/address`, {
+                headers: { 'x-auth-token': token },
             });
-
             const data = await response.json();
-            
             if (data.success) {
                 setAddresses(data.data);
-                // Set default address if available
-                const defaultAddress = data.data.find(addr => addr.isDefault);
-                if (defaultAddress) {
-                    setSelectedAddress(defaultAddress);
-                } else if (data.data.length > 0) {
+                if (data.data.length > 0) {
                     setSelectedAddress(data.data[0]);
                 }
-            } else {
-                throw new Error(data.message || 'Failed to fetch addresses');
             }
         } catch (error) {
-            console.error('Error fetching addresses:', error);
-        } finally {
-            setLoading(false);
+            console.error('Failed to fetch addresses:', error);
+        }
+    };
+
+    const handleAddressChange = (e) => {
+        setNewAddress({ ...newAddress, [e.target.name]: e.target.value });
+    };
+
+    const handleSaveAddress = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}/address`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': token,
+                },
+                body: JSON.stringify(newAddress),
+            });
+            const data = await response.json();
+            if (data.success) {
+                fetchAddresses();
+                setShowAddressModal(false);
+            } else {
+                alert('Failed to save address: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error saving address:', error);
+            alert('Error saving address.');
         }
     };
 
@@ -120,470 +154,269 @@ const CheckoutPage = () => {
     };
 
     const handleRazorpayPayment = async () => {
-        // For now, we'll simulate Razorpay payment
-        const paymentSuccess = window.confirm('Mock Razorpay payment: Click OK to simulate successful payment');
-        if (paymentSuccess) {
-            await placeOrder('razorpay', 'razorpay_pay_' + Date.now());
-        } else {
-            throw new Error('Payment cancelled');
+        if (!razorpayLoaded) {
+            alert('Payment gateway is not loaded. Please try again.');
+            return;
+        }
+        if (!orderSummary) {
+            alert('Order summary is not available.');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const orderId = 'ORD' + Date.now();
+
+            const orderData = {
+                orderId: orderId,
+                amount: orderSummary.total * 100,
+                currency: 'INR',
+                shippingAddress: {
+                    fullName: selectedAddress.fullName,
+                    phone: selectedAddress.phone,
+                    address: selectedAddress.addressLine1,
+                    type: selectedAddress.addressType,
+                },
+                items: orderSummary.items,
+            };
+
+            const response = await fetch(`${API_URL}/orders/create-razorpay-order`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': token,
+                },
+                body: JSON.stringify(orderData),
+            });
+
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.message || 'Failed to create payment order');
+            }
+
+            const razorpayOrderId = data.razorpayOrderId;
+
+            const options = {
+                key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+                amount: orderSummary.total * 100,
+                currency: 'INR',
+                name: 'MerchForFan',
+                description: `Order for ${orderSummary.items.length} items`,
+                order_id: razorpayOrderId,
+                handler: async function (response) {
+                    try {
+                        await verifyPayment({
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature,
+                            orderData: orderData,
+                        });
+                    } catch (error) {
+                        console.error('Payment verification failed:', error);
+                        alert('Payment verification failed. Please contact support.');
+                    }
+                },
+                prefill: {
+                    name: selectedAddress.fullName,
+                    contact: selectedAddress.phone,
+                    email: localStorage.getItem('userEmail') || '',
+                },
+                notes: {
+                    address: selectedAddress.addressLine1,
+                    order_id: orderId,
+                },
+                theme: {
+                    color: '#4f46e5',
+                },
+                modal: {
+                    ondismiss: function () {
+                        console.log('Payment modal dismissed');
+                    },
+                },
+            };
+
+            const razorpay = new window.Razorpay(options);
+            razorpay.open();
+        } catch (error) {
+            console.error('Razorpay payment error:', error);
+            throw error;
+        }
+    };
+
+    const verifyPayment = async (paymentData) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_URL}/orders/verify-payment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': token,
+                },
+                body: JSON.stringify(paymentData),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                await placeOrder('razorpay', paymentData.razorpay_payment_id);
+            } else {
+                throw new Error(data.message || 'Payment verification failed');
+            }
+        } catch (error) {
+            console.error('Payment verification error:', error);
+            throw error;
         }
     };
 
     const placeOrder = async (paymentMethod, paymentId = null) => {
         try {
             const token = localStorage.getItem('token');
-            
-            if (!token) {
-                throw new Error('User not authenticated');
-            }
+            if (!token) throw new Error('User not authenticated');
 
-            // Generate order ID
             const orderId = 'ORD' + Date.now();
-
             const orderData = {
                 orderId: orderId,
                 shippingAddress: {
                     fullName: selectedAddress.fullName,
                     phone: selectedAddress.phone,
                     address: selectedAddress.addressLine1,
-                    type: selectedAddress.addressType
+                    type: selectedAddress.addressType,
                 },
                 items: orderSummary.items,
                 totalAmount: orderSummary.total,
-                paymentStatus: paymentMethod === 'cod' ? 'Unpaid' : 'Paid',
-                status: 'Pending'
+                paymentMethod: paymentMethod,
+                paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid',
+                paymentId: paymentId,
+                status: 'confirmed',
             };
 
-            // Save order to database using your existing route
             const response = await fetch(`${API_URL}/orders/create`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-auth-token': token
+                    'x-auth-token': token,
                 },
-                body: JSON.stringify(orderData)
+                body: JSON.stringify(orderData),
             });
 
             const data = await response.json();
-            
             if (data.success) {
-                // Clear cart after successful order
                 localStorage.removeItem('cart');
                 setCartItems([]);
-                
-                // Redirect to order confirmation page
-                navigate(`/order-confirmation/${data.orderId}`, {
+                navigate(`/order-confirmation/${data.order._id || data.orderId}`, {
                     state: {
-                        orderNumber: data.orderId,
-                        totalAmount: orderSummary.total
-                    }
+                        orderNumber: data.order.orderId || orderId,
+                        totalAmount: orderSummary.total,
+                        paymentMethod: paymentMethod,
+                    },
                 });
             } else {
                 throw new Error(data.message || 'Failed to create order');
             }
-
         } catch (error) {
             console.error('Error placing order:', error);
             throw error;
         }
     };
 
-    const saveNewAddress = async (newAddress) => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_URL}/user/address`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-auth-token': token
-                },
-                body: JSON.stringify({
-                    fullName: newAddress.name,
-                    phone: newAddress.phone,
-                    addressLine1: newAddress.address,
-                    addressType: newAddress.type,
-                    isDefault: newAddress.isDefault
-                })
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                // Refresh addresses to get updated list
-                await fetchAddresses();
-                setShowAddressModal(false);
-                alert('Address added successfully!');
-            } else {
-                throw new Error(data.message);
-            }
-        } catch (error) {
-            console.error('Error saving address:', error);
-            alert('Error saving address: ' + error.message);
-        }
-    };
-
-    const getAddressTypeIcon = (type) => {
-        switch (type) {
-            case 'home': return 'fas fa-home';
-            case 'work': return 'fas fa-briefcase';
-            case 'other': return 'fas fa-map-marker-alt';
-            default: return 'fas fa-map-marker-alt';
-        }
-    };
-
-    const getAddressTypeColor = (type) => {
-        switch (type) {
-            case 'home': return '#ff6b6b';
-            case 'work': return '#74b9ff';
-            case 'other': return '#2ed573';
-            default: return '#a4b0be';
-        }
-    };
-
     if (loading) {
-        return (
-            <div className="checkout-page">
-                <div className="checkout-container">
-                    <div className="loading">Loading checkout...</div>
-                </div>
-            </div>
-        );
-    }
-
-    if (cartItems.length === 0 && !placingOrder) {
-        return (
-            <div className="checkout-page">
-                <div className="checkout-container">
-                    <div className="empty-cart">
-                        <div className="empty-cart-icon">
-                            <i className="fas fa-shopping-cart"></i>
-                        </div>
-                        <h2>Your cart is empty</h2>
-                        <p>Add some products to your cart before checkout</p>
-                        <button 
-                            className="continue-shopping-btn"
-                            onClick={() => navigate('/')}
-                        >
-                            Continue Shopping
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
+        return <div className="checkout-page-loading">Loading Checkout...</div>;
     }
 
     return (
         <div className="checkout-page">
+            <h1>Checkout</h1>
             <div className="checkout-container">
-                <div className="checkout-header">
-                    <h1>Checkout</h1>
-                    <p>Complete your purchase</p>
-                </div>
-
-                {/* Checkout Steps */}
                 <div className="checkout-steps">
-                    <div className={`step ${currentStep >= 1 ? 'active' : ''}`}>
-                        <div className="step-number">1</div>
-                        <div className="step-text">Address</div>
+                    {/* Step 1: Shipping Address */}
+                    <div className={`checkout-step ${currentStep === 1 ? 'active' : ''}`}>
+                        <h2>1. Shipping Address</h2>
+                        {addresses.map((addr) => (
+                            <div key={addr._id} className={`address-card ${selectedAddress?._id === addr._id ? 'selected' : ''}`} onClick={() => setSelectedAddress(addr)}>
+                                <strong>{addr.fullName}</strong> ({addr.addressType})<br />
+                                {addr.addressLine1}, {addr.city}, {addr.state} - {addr.postalCode}<br />
+                                Phone: {addr.phone}
+                            </div>
+                        ))}
+                        <button onClick={() => setShowAddressModal(true)} className="add-address-btn">Add New Address</button>
+                        {currentStep === 1 && <button onClick={() => setCurrentStep(2)} disabled={!selectedAddress} className="next-step-btn">Next: Payment</button>}
                     </div>
-                    <div className={`step ${currentStep >= 2 ? 'active' : ''}`}>
-                        <div className="step-number">2</div>
-                        <div className="step-text">Payment</div>
-                    </div>
-                    <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>
-                        <div className="step-number">3</div>
-                        <div className="step-text">Confirmation</div>
+
+                    {/* Step 2: Payment Method */}
+                    <div className={`checkout-step ${currentStep === 2 ? 'active' : ''}`}>
+                        <h2>2. Payment Method</h2>
+                        {currentStep >= 2 && (
+                            <div>
+                                <div className="payment-option">
+                                    <input type="radio" id="cod" name="payment" value="cod" onChange={(e) => setSelectedPayment(e.target.value)} />
+                                    <label htmlFor="cod">Cash on Delivery (COD)</label>
+                                </div>
+                                <div className="payment-option">
+                                    <input type="radio" id="razorpay" name="payment" value="razorpay" onChange={(e) => setSelectedPayment(e.target.value)} />
+                                    <label htmlFor="razorpay">Pay with Razorpay</label>
+                                </div>
+                                <button onClick={() => setCurrentStep(1)} className="prev-step-btn">Back to Address</button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className="checkout-content">
-                    {/* Left Column - Forms */}
-                    <div className="checkout-forms">
-                        {/* Address Section */}
-                        <div className="checkout-section">
-                            <div className="section-header">
-                                <h3>Delivery Address</h3>
-                                <button 
-                                    className="edit-btn" 
-                                    onClick={() => setShowAddressModal(true)}
-                                    disabled={addresses.length >= 2}
-                                >
-                                    Add New Address
-                                </button>
+                <div className="order-summary">
+                    <h2>Order Summary</h2>
+                    {orderSummary ? (
+                        <>
+                            {orderSummary.items.map(item => (
+                                <div key={item._id} className="summary-item">
+                                    <span>{item.name} x {item.quantity}</span>
+                                    <span>₹{item.price * item.quantity}</span>
+                                </div>
+                            ))}
+                            <hr />
+                            <div className="summary-total">
+                                <span>Subtotal</span>
+                                <span>₹{orderSummary.subtotal.toFixed(2)}</span>
                             </div>
-                            
-                            {addresses.length === 0 ? (
-                                <div className="no-addresses">
-                                    <p>No addresses found. Please add a delivery address.</p>
-                                    <button 
-                                        className="continue-shopping-btn"
-                                        onClick={() => setShowAddressModal(true)}
-                                    >
-                                        Add Address
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="addresses-container">
-                                    {addresses.map(address => (
-                                        <div
-                                            key={address._id}
-                                            className={`address-card ${selectedAddress?._id === address._id ? 'selected' : ''}`}
-                                            onClick={() => setSelectedAddress(address)}
-                                        >
-                                            {address.isDefault && (
-                                                <div className="default-badge">
-                                                    <i className="fas fa-star"></i>
-                                                    Default
-                                                </div>
-                                            )}
-                                            
-                                            <div className="address-type-badge">
-                                                <i 
-                                                    className={getAddressTypeIcon(address.addressType)}
-                                                    style={{ color: getAddressTypeColor(address.addressType) }}
-                                                ></i>
-                                                <span>{address.addressType.charAt(0).toUpperCase() + address.addressType.slice(1)}</span>
-                                            </div>
-                                            
-                                            <div className="address-details">
-                                                <div className="address-name">{address.fullName}</div>
-                                                <div className="address-phone">{address.phone}</div>
-                                                <div className="address-text">{address.addressLine1}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    
-                                    {addresses.length < 2 && (
-                                        <div className="add-new-address" onClick={() => setShowAddressModal(true)}>
-                                            <i className="fas fa-plus"></i>
-                                            Add New Address
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {addresses.length >= 2 && (
-                                <div className="info-message">
-                                    <i className="fas fa-info-circle"></i>
-                                    Maximum 2 addresses reached
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Payment Section */}
-                        <div className="checkout-section">
-                            <div className="section-header">
-                                <h3>Payment Method</h3>
+                            <div className="summary-total">
+                                <span>Shipping</span>
+                                <span>₹{orderSummary.shipping.toFixed(2)}</span>
                             </div>
-                            
-                            <div className="payment-methods">
-                                <div
-                                    className={`payment-method ${selectedPayment === 'razorpay' ? 'selected' : ''}`}
-                                    onClick={() => setSelectedPayment('razorpay')}
-                                >
-                                    <div className="payment-icon">RP</div>
-                                    <div className="payment-details">
-                                        <div className="payment-name">Razorpay</div>
-                                        <div className="payment-description">Pay securely with UPI, Card, Net Banking</div>
-                                    </div>
-                                </div>
-                                
-                                <div
-                                    className={`payment-method ${selectedPayment === 'cod' ? 'selected' : ''}`}
-                                    onClick={() => setSelectedPayment('cod')}
-                                >
-                                    <div className="payment-icon">COD</div>
-                                    <div className="payment-details">
-                                        <div className="payment-name">Cash on Delivery</div>
-                                        <div className="payment-description">Pay when you receive your order</div>
-                                    </div>
-                                </div>
+                            <hr />
+                            <div className="summary-total grand-total">
+                                <span>Total</span>
+                                <span>₹{orderSummary.total.toFixed(2)}</span>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Right Column - Order Summary */}
-                    <div className="order-summary">
-                        <div className="summary-card">
-                            <h3>Order Summary</h3>
-                            
-                            {orderSummary && (
-                                <>
-                                    <div className="order-items">
-                                        {cartItems.map((item, index) => (
-                                            <div key={index} className="order-item">
-                                                <div className="item-image">
-                                                    <img src={item.image} alt={item.name} />
-                                                </div>
-                                                <div className="item-info">
-                                                    <div className="item-name">{item.name}</div>
-                                                    <div className="item-variant">Size: {item.size}</div>
-                                                    <div className="item-quantity">Qty: {item.quantity}</div>
-                                                </div>
-                                                <div className="item-price">₹{Number(item.price).toLocaleString()}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    
-                                    <div className="summary-totals">
-                                        <div className="summary-row">
-                                            <span>Subtotal ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} items):</span>
-                                            <span>₹{orderSummary.subtotal.toLocaleString()}</span>
-                                        </div>
-                                        <div className="summary-row">
-                                            <span>Shipping:</span>
-                                            <span>{orderSummary.shipping === 0 ? 'Free' : `₹${orderSummary.shipping}`}</span>
-                                        </div>
-                                        <div className="summary-row">
-                                            <span>Tax:</span>
-                                            <span>₹{orderSummary.tax.toLocaleString()}</span>
-                                        </div>
-                                        <div className="summary-divider"></div>
-                                        <div className="summary-row total">
-                                            <span>Total:</span>
-                                            <span>₹{orderSummary.total.toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <button
-                                        className="place-order-btn"
-                                        onClick={handlePlaceOrder}
-                                        disabled={!selectedAddress || !selectedPayment || addresses.length === 0 || placingOrder}
-                                    >
-                                        {placingOrder ? 'Placing Order...' : 'Place Order'}
-                                    </button>
-                                </>
-                            )}
-                        </div>
-                    </div>
+                            <button onClick={handlePlaceOrder} disabled={placingOrder || !selectedAddress || !selectedPayment} className="place-order-btn">
+                                {placingOrder ? 'Placing Order...' : 'Place Order'}
+                            </button>
+                        </>
+                    ) : (
+                        <p>Your cart is empty.</p>
+                    )}
                 </div>
             </div>
 
-            {/* Add Address Modal */}
             {showAddressModal && (
-                <AddressModal
-                    onClose={() => setShowAddressModal(false)}
-                    onSave={saveNewAddress}
-                    addressesCount={addresses.length}
-                />
-            )}
-        </div>
-    );
-};
-
-// Address Modal Component
-const AddressModal = ({ onClose, onSave, addressesCount }) => {
-    const [formData, setFormData] = useState({
-        type: 'home',
-        name: '',
-        phone: '',
-        address: '',
-        isDefault: addressesCount === 0
-    });
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!formData.name.trim() || !formData.phone.trim() || !formData.address.trim()) {
-            alert('Please fill all required fields');
-            return;
-        }
-        onSave(formData);
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
-    };
-
-    return (
-        <div className="modal-overlay">
-            <div className="address-modal">
-                <div className="modal-header">
-                    <h3>Add New Address</h3>
-                    <button className="close-btn" onClick={onClose}>×</button>
+                <div className="modal-backdrop">
+                    <div className="modal-content">
+                        <h2>Add New Address</h2>
+                        <form onSubmit={handleSaveAddress}>
+                            <input name="fullName" placeholder="Full Name" onChange={handleAddressChange} required />
+                            <input name="phone" placeholder="Phone Number" onChange={handleAddressChange} required />
+                            <input name="addressLine1" placeholder="Address" onChange={handleAddressChange} required />
+                            <input name="city" placeholder="City" onChange={handleAddressChange} required />
+                            <input name="state" placeholder="State" onChange={handleAddressChange} required />
+                            <input name="postalCode" placeholder="Postal Code" onChange={handleAddressChange} required />
+                            <select name="addressType" onChange={handleAddressChange}>
+                                <option value="Home">Home</option>
+                                <option value="Work">Work</option>
+                            </select>
+                            <div className="modal-actions">
+                                <button type="submit">Save Address</button>
+                                <button type="button" onClick={() => setShowAddressModal(false)}>Cancel</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                
-                <form className="address-form" onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label>Address Type</label>
-                        <select
-                            name="type"
-                            value={formData.type}
-                            onChange={handleInputChange}
-                            className="form-input"
-                        >
-                            <option value="home">Home</option>
-                            <option value="work">Work</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>Full Name *</label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleInputChange}
-                                required
-                                className="form-input"
-                                placeholder="Enter your full name"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Phone Number *</label>
-                            <input
-                                type="tel"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleInputChange}
-                                required
-                                className="form-input"
-                                placeholder="Enter your phone number"
-                            />
-                        </div>
-                    </div>
-                    
-                    <div className="form-group">
-                        <label>Complete Address *</label>
-                        <input
-                            type="text"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            required
-                            className="form-input"
-                            placeholder="Enter complete address with city, state and pincode"
-                        />
-                    </div>
-                    
-                    <div className="checkbox-group">
-                        <label className="checkbox-label">
-                            <input
-                                type="checkbox"
-                                name="isDefault"
-                                checked={formData.isDefault}
-                                onChange={handleInputChange}
-                            />
-                            <span className="checkmark"></span>
-                            Set as default address
-                        </label>
-                    </div>
-                    
-                    <div className="form-buttons">
-                        <button type="button" className="cancel-btn" onClick={onClose}>
-                            Cancel
-                        </button>
-                        <button type="submit" className="save-btn">
-                            Save Address
-                        </button>
-                    </div>
-                </form>
-            </div>
+            )}
         </div>
     );
 };
